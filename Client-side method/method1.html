@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBot</title>
+</head>
+<body>
+  <div id="chatBox"></div>
+<form>
+  <input id="inputField" type="text">
+  <button id="sendButton" type="button">Send</button>
+</form>
+</body>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+  // Establish a socket connection to the server
+const socket = io();
+
+// Query DOM elements
+const inputField = document.getElementById("inputField");
+const chatBox = document.getElementById("chatBox");
+
+// Helper function to append a message to the chat box
+function appendMessage(message, sender) {
+  const messageElement = document.createElement("div");
+  messageElement.classList.add("message-text", sender);
+  messageElement.textContent = message;
+  
+  const timestamp = new Date().toLocaleTimeString(); // create timestamp
+  const timestampElement = document.createElement("span"); // create span element for timestamp
+  timestampElement.classList.add("timestamp");
+  timestampElement.textContent = timestamp;
+  
+  const messageContainer = document.createElement("div");
+  messageContainer.classList.add("message-container");
+  messageContainer.appendChild(messageElement);
+  messageContainer.appendChild(timestampElement);
+  chatBox.appendChild(messageContainer);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Handle sending messages
+function sendMessage() {
+  const message = inputField.value.trim();
+  if (message === "") {
+    return;
+  }
+  appendMessage(message, "user");
+  socket.emit("user-message", message);
+  inputField.value = "";
+}
+
+// Handle receiving messages from the server
+socket.on("bot-message", (message) => {
+  appendMessage(message, "bot");
+});
+
+// Attach event listeners
+document.querySelector("form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  sendMessage();
+});
+
+document.getElementById("sendButton").addEventListener("click", sendMessage);
+
+document.getElementById("inputField").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    sendMessage();
+  }
+});
+
+</script>
+</html>
